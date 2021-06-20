@@ -1,24 +1,29 @@
-import discord
-from google.cloud import translate_v2 as translate
 import os
 import signal
 import sys
+import discord
+import requests
+from google.cloud import translate_v2 as translate
 
-
-# Credentials in order to use the Google Cloud Translator API
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = r""
 
 # Translator object
 translate_client = translate.Client()
-lang = translate_client.get_languages()
+try:
+    lang = translate_client.get_languages()
+except requests.exceptions.RequestException:
+    print("Failed to load language codes")
+    sys.exit(1)
 lang = [code["language"] for code in lang]
+
 # Initiate Discord client
 client = discord.Client()
+
 
 # Console message to let the user know bot is now online
 @client.event
 async def on_ready():
     print("Bunyeok has awoken!")
+
 
 # Bot commands
 @client.event
@@ -53,15 +58,28 @@ async def on_message(message):
             await message.channel.send("Message missing!")
             return
 
-        translate_client.detect_language(msg)
-        translated_message = translate_client.translate(msg, target_language=f"{trg}")
+        try:
+            translate_client.detect_language(msg)
+            translated_message = translate_client.translate(
+                msg, target_language=f"{trg}"
+            )
+        except requests.exceptions.RequestException:
+            await message.channel.send("Translation service unavailable!")
+            return
         await message.channel.send(translated_message["translatedText"])
+
 
 def signal_handler(_sig, _frame):
     print("Exiting...")
     sys.exit(0)
 
+
 signal.signal(signal.SIGINT, signal_handler)
 
+bot_token = os.getenv("BOT_TOKEN")
+if not bot_token:
+    print("BOT_TOKEN environment variable not set")
+    sys.exit(1)
+
 # Bot token
-client.run("")
+client.run(bot_token)
