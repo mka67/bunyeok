@@ -5,6 +5,7 @@ import discord
 import requests
 from google.cloud import translate_v2 as translate
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = r""
 
 # Translator object
 translate_client = translate.Client()
@@ -76,10 +77,10 @@ def signal_handler(_sig, _frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-bot_token = os.getenv("BOT_TOKEN")
-if not bot_token:
-    print("BOT_TOKEN environment variable not set")
-    sys.exit(1)
+#bot_token = os.getenv("BOT_TOKEN")
+#if not bot_token:
+#    print("BOT_TOKEN environment variable not set")
+#    sys.exit(1)#
 
 # Bot token
-client.run(bot_token)
+client.run("")
